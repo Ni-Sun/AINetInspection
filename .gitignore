@@ -1,9 +1,27 @@
 # 文档
 docs/
+*todo.md
 
 # 图片
 assets/
 
+# 虚拟环境
+python/.venv38
+
+# 数据集
+python/Dataset
+
+# 训练日志和模型权重
+python/runs
+src/main/java/com/yys/zipdata
+
+# 配置文件因为各个开发环境不同，不上传
+python/config/config.yaml
+src/main/resources/application.yml
+target/classes/application.yml
+fount/package.json
+fount/package-lock.json
+nginx/nginx.conf
 
 # -----------------------------
 # Java / Spring Boot 后端部分
@@ -116,13 +134,3 @@ pnpm-debug.log*
 *.pem
 *.crt
 
-<<<<<<< HEAD
-*.pyc
-=======
-# 配置文件因为各个开发环境不同，不上传
-python/config/config.yaml
-src/main/resources/application.yml
-target/classes/application.yml
-fount/package.json
-fount/package-lock.json
->>>>>>> a8a59db4840052ec8d0aa18b0b7a839258b0d15c

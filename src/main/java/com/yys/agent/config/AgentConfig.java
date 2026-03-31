@@ -85,27 +85,4 @@ public class AgentConfig {
         return new OperationDecisionAgent(agentId, agentBus);
     }
 
-    /**
-     * 智能体初始化器
-     * 在所有bean创建后，注册和启动所有智能体
-     */
-    @Bean
-    public AgentInitializer agentInitializer(
-            AgentManager agentManager,
-            DataCollectionAgent dataCollectionAgent,
-            TaskSchedulingAgent taskSchedulingAgent,
-            ModelInferenceAgent modelInferenceAgent,
-            AnomalyAnalysisAgent anomalyAnalysisAgent,
-            OperationDecisionAgent operationDecisionAgent) {
-        
-        logger.info("初始化所有智能体...");
-        return new AgentInitializer(
-                agentManager,
-                dataCollectionAgent,
-                taskSchedulingAgent,
-                modelInferenceAgent,
-                anomalyAnalysisAgent,
-                operationDecisionAgent
-        );
-    }
 }

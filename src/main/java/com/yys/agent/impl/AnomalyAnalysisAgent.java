@@ -24,7 +24,7 @@ public class AnomalyAnalysisAgent extends AbstractAgent {
     /**
      * 异常检测线程池
      */
-    private ExecutorService analysisExecutor;
+    private ScheduledExecutorService analysisExecutor;
 
     /**
      * 告警规则配置
@@ -84,7 +84,7 @@ public class AnomalyAnalysisAgent extends AbstractAgent {
     @Override
     protected void doInitialize() throws Exception {
         logger.info("[异常分析智能体] 初始化中...");
-        analysisExecutor = Executors.newFixedThreadPool(4);
+        analysisExecutor = Executors.newScheduledThreadPool(4);
         if (agentBus != null) {
             agentBus.registerAgent(this);
         }

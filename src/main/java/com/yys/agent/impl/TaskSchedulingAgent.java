@@ -3,6 +3,7 @@ package com.yys.agent.impl;
 import com.yys.agent.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * 任务调度智能体
@@ -60,8 +61,7 @@ public class TaskSchedulingAgent extends AbstractAgent {
         super(agentId, "任务调度智能体", AgentType.TASK_SCHEDULING);
         this.agentBus = agentBus;
         this.taskQueue = new PriorityQueue<>(
-                Comparator.comparingInt(ScheduledTask::getPriority).reversed()
-        );
+                Comparator.comparingInt(ScheduledTask::getPriority).reversed());
         this.executionHistory = new ConcurrentHashMap<>();
         this.nodeStatuses = new ConcurrentHashMap<>();
     }
@@ -145,7 +145,7 @@ public class TaskSchedulingAgent extends AbstractAgent {
             priority = priority != null ? priority : 5; // 默认优先级为5
 
             ScheduledTask task = new ScheduledTask(taskId, taskType, priority, taskData);
-            
+
             taskLock.writeLock().lock();
             try {
                 if (taskQueue.offer(task)) {
@@ -292,7 +292,7 @@ public class TaskSchedulingAgent extends AbstractAgent {
             // 分发待处理任务
             while (!taskQueue.isEmpty()) {
                 ScheduledTask task = taskQueue.peek();
-                
+
                 // 创建分发消息
                 AgentMessage dispatchMsg = new AgentMessage(agentId, "TASK_DISPATCH", "task_scheduling");
                 dispatchMsg.addPayload("taskId", task.getTaskId());
@@ -305,8 +305,7 @@ public class TaskSchedulingAgent extends AbstractAgent {
                 TaskExecutionRecord record = new TaskExecutionRecord(
                         task.getTaskId(),
                         optimalNode,
-                        "DISPATCHED"
-                );
+                        "DISPATCHED");
                 executionHistory.put(task.getTaskId(), record);
 
                 agentBus.sendMessage(dispatchMsg);
@@ -356,8 +355,7 @@ public class TaskSchedulingAgent extends AbstractAgent {
                     totalTasksScheduled,
                     totalTasksDispatched,
                     taskQueue.size(),
-                    nodeStatuses.size()
-            );
+                    nodeStatuses.size());
         } finally {
             taskLock.readLock().unlock();
         }
@@ -443,7 +441,7 @@ public class TaskSchedulingAgent extends AbstractAgent {
         private final int taskCount;
         private final long timestamp;
 
-        public NodeStatus(String nodeId, int cpuUsage, int memoryUsage, int taskCount) {
+        public NodeStatus(String nodeId, Integer cpuUsage, Integer memoryUsage, Integer taskCount) {
             this.nodeId = nodeId;
             this.cpuUsage = cpuUsage != null ? cpuUsage : 0;
             this.memoryUsage = memoryUsage != null ? memoryUsage : 0;

@@ -15,6 +15,49 @@ import java.util.concurrent.*;
  * - 成本优化分析
  */
 public class OperationDecisionAgent extends AbstractAgent {
+    /**
+     * 内部类：决策记录
+     */
+    static class DecisionRecord {
+        private final String decisionId;
+        private final String suggestionId;
+        private final String action;
+        private final long timestamp;
+        private String status;
+
+        public DecisionRecord(String decisionId, String suggestionId, String action, long timestamp,
+                String status) {
+            this.decisionId = decisionId;
+            this.suggestionId = suggestionId;
+            this.action = action;
+            this.timestamp = timestamp;
+            this.status = status;
+        }
+
+        public String getDecisionId() {
+            return decisionId;
+        }
+
+        public String getSuggestionId() {
+            return suggestionId;
+        }
+
+        public String getAction() {
+            return action;
+        }
+
+        public long getTimestamp() {
+            return timestamp;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public void setStatus(String status) {
+            this.status = status;
+        }
+    }
 
     /**
      * 运维建议队列
@@ -150,9 +193,9 @@ public class OperationDecisionAgent extends AbstractAgent {
                 return;
             }
 
-            SystemMetrics metrics = new SystemMetrics(cpuUsage, memoryUsage, diskUsage, 
+            SystemMetrics metrics = new SystemMetrics(cpuUsage, memoryUsage, diskUsage,
                     taskQueueSize, inferenceLatency);
-            
+
             if (metricsQueue.offer(metrics)) {
                 logger.debug("[运维决策智能体] 接收系统指标");
             }
@@ -167,13 +210,13 @@ public class OperationDecisionAgent extends AbstractAgent {
     private void handleRequestOptimization(AgentMessage message) {
         try {
             String aspectType = (String) message.getPayloadValue("aspectType"); // "resource", "performance", "cost"
-            
+
             if (aspectType == null) {
                 aspectType = "resource";
             }
 
             List<OptimizationSuggestion> suggestions = generateOptimizations(aspectType);
-            
+
             AgentMessage response = new AgentMessage(agentId, "OPTIMIZATION_SUGGESTIONS", "operation_decision");
             response.setCorrelationId(message.getMessageId());
             response.addPayload("aspectType", aspectType);
@@ -262,8 +305,7 @@ public class OperationDecisionAgent extends AbstractAgent {
             // 更新历史记录
             MetricsHistory history = metricsHistory.computeIfAbsent(
                     "system_metrics",
-                    k -> new MetricsHistory()
-            );
+                    k -> new MetricsHistory());
             history.recordMetrics(metrics);
 
             // 检查是否需要扩展
@@ -272,8 +314,7 @@ public class OperationDecisionAgent extends AbstractAgent {
                         "SCALE_OUT",
                         "CPU使用率过高",
                         String.format("建议增加计算节点，当前CPU使用率: %d%%", metrics.getCpuUsage()),
-                        "HIGH"
-                );
+                        "HIGH");
                 addSuggestion(suggestion);
                 sendOptimizationNotification(suggestion);
             }
@@ -284,8 +325,7 @@ public class OperationDecisionAgent extends AbstractAgent {
                         "OPTIMIZE_MEMORY",
                         "内存使用率过高",
                         String.format("建议优化内存配置或清理缓存，当前内存使用率: %d%%", metrics.getMemoryUsage()),
-                        "HIGH"
-                );
+                        "HIGH");
                 addSuggestion(suggestion);
                 sendOptimizationNotification(suggestion);
             }
@@ -296,8 +336,7 @@ public class OperationDecisionAgent extends AbstractAgent {
                         "ADD_WORKERS",
                         "任务队列堆积",
                         String.format("建议增加工作线程或节点，当前队列大小: %d", metrics.getTaskQueueSize()),
-                        "MEDIUM"
-                );
+                        "MEDIUM");
                 addSuggestion(suggestion);
                 sendOptimizationNotification(suggestion);
             }
@@ -308,8 +347,7 @@ public class OperationDecisionAgent extends AbstractAgent {
                         "OPTIMIZE_MODEL",
                         "推理延迟过高",
                         String.format("建议优化模型或迁移到TensorRT，当前延迟: %dms", metrics.getInferenceLatency()),
-                        "MEDIUM"
-                );
+                        "MEDIUM");
                 addSuggestion(suggestion);
             }
 
@@ -338,8 +376,7 @@ public class OperationDecisionAgent extends AbstractAgent {
                         "PREDICTIVE_SCALE",
                         "预测性扩展",
                         "CPU使用率呈上升趋势，建议提前增加资源以避免过载",
-                        "MEDIUM"
-                );
+                        "MEDIUM");
                 addSuggestion(suggestion);
             }
 
@@ -349,8 +386,7 @@ public class OperationDecisionAgent extends AbstractAgent {
                         "OPTIMIZE_COST",
                         "成本优化",
                         "系统资源利用率较低，建议缩减部分资源以降低成本",
-                        "LOW"
-                );
+                        "LOW");
                 addSuggestion(suggestion);
             }
 
@@ -367,21 +403,21 @@ public class OperationDecisionAgent extends AbstractAgent {
 
         switch (aspectType) {
             case "resource":
-                suggestions.add(createSuggestion("CHECK_CPU", "检查CPU使用率", 
+                suggestions.add(createSuggestion("CHECK_CPU", "检查CPU使用率",
                         "建议监控CPU使用率，如超过80%需要扩展", "LOW"));
-                suggestions.add(createSuggestion("CHECK_MEMORY", "检查内存使用率", 
+                suggestions.add(createSuggestion("CHECK_MEMORY", "检查内存使用率",
                         "建议监控内存使用率，如超过85%需要优化", "LOW"));
                 break;
             case "performance":
-                suggestions.add(createSuggestion("OPTIMIZE_INFERENCE", "优化推理性能", 
+                suggestions.add(createSuggestion("OPTIMIZE_INFERENCE", "优化推理性能",
                         "建议使用TensorRT或ONNX格式优化模型", "MEDIUM"));
-                suggestions.add(createSuggestion("BATCH_PROCESSING", "批处理优化", 
+                suggestions.add(createSuggestion("BATCH_PROCESSING", "批处理优化",
                         "建议对推理任务进行批处理以提高吞吐量", "MEDIUM"));
                 break;
             case "cost":
-                suggestions.add(createSuggestion("USE_SPOT", "使用竞价实例", 
+                suggestions.add(createSuggestion("USE_SPOT", "使用竞价实例",
                         "建议使用云厂商的竞价实例以降低成本", "LOW"));
-                suggestions.add(createSuggestion("AUTO_SCALING", "自动扩缩容", 
+                suggestions.add(createSuggestion("AUTO_SCALING", "自动扩缩容",
                         "建议启用自动扩缩容以优化成本", "MEDIUM"));
                 break;
         }
@@ -399,8 +435,7 @@ public class OperationDecisionAgent extends AbstractAgent {
                 title,
                 description,
                 priority,
-                System.currentTimeMillis()
-        );
+                System.currentTimeMillis());
     }
 
     /**
@@ -427,7 +462,7 @@ public class OperationDecisionAgent extends AbstractAgent {
         notification.addPayload("title", suggestion.getTitle());
         notification.addPayload("description", suggestion.getDescription());
         notification.addPayload("priority", suggestion.getPriority());
-        
+
         // 设置优先级：HIGH=10, MEDIUM=7, LOW=5
         int msgPriority = 5;
         if ("HIGH".equals(suggestion.getPriority())) {
@@ -447,8 +482,7 @@ public class OperationDecisionAgent extends AbstractAgent {
                 super.getStatistics(),
                 totalSuggestions,
                 executedSuggestions,
-                suggestionHistory.size()
-        );
+                suggestionHistory.size());
     }
 
     /**
@@ -462,8 +496,8 @@ public class OperationDecisionAgent extends AbstractAgent {
         private final Long inferenceLatency;
         private final long timestamp;
 
-        public SystemMetrics(int cpuUsage, int memoryUsage, Integer diskUsage, 
-                            Integer taskQueueSize, Long inferenceLatency) {
+        public SystemMetrics(int cpuUsage, int memoryUsage, Integer diskUsage,
+                Integer taskQueueSize, Long inferenceLatency) {
             this.cpuUsage = cpuUsage;
             this.memoryUsage = memoryUsage;
             this.diskUsage = diskUsage;
@@ -501,8 +535,8 @@ public class OperationDecisionAgent extends AbstractAgent {
         private final long createdAt;
         private String status = "PROPOSED";
 
-        public OptimizationSuggestion(String suggestionId, String type, String title, 
-                                     String description, String priority, long createdAt) {
+        public OptimizationSuggestion(String suggestionId, String type, String title,
+                String description, String priority, long createdAt) {
             this.suggestionId = suggestionId;
             this.type = type;
             this.title = title;
@@ -578,17 +612,19 @@ public class OperationDecisionAgent extends AbstractAgent {
         }
 
         public double calculateCpuTrend() {
-            if (metrics.size() < 2) return 0;
+            if (metrics.size() < 2)
+                return 0;
             int newValue = metrics.get(metrics.size() - 1).getCpuUsage();
             int oldValue = metrics.get(Math.max(0, metrics.size() - 10)).getCpuUsage();
-            return (double)(newValue - oldValue) / 10;
+            return (double) (newValue - oldValue) / 10;
         }
 
         public double calculateMemoryTrend() {
-            if (metrics.size() < 2) return 0;
+            if (metrics.size() < 2)
+                return 0;
             int newValue = metrics.get(metrics.size() - 1).getMemoryUsage();
             int oldValue = metrics.get(Math.max(0, metrics.size() - 10)).getMemoryUsage();
-            return (double)(newValue - oldValue) / 10;
+            return (double) (newValue - oldValue) / 10;
         }
 
         public double getAverageCpuUsage() {
