@@ -1,10 +1,11 @@
 import os
 import torch
 from ultralytics import YOLO
+from datetime import datetime
 
 
-def train_yolo(data_path, log_dirs, total_epochs=100):
-    model = YOLO(r'D:/PycharmProjects/aivideo/yolov11/yolo11m.pt')
+def train_yolo(data_path, log_dirs, total_epochs=100, model_weights="yolov8n.pt"):
+    model = YOLO(model_weights)
 
     # 设置日志文件路径
     log_dir = os.path.join('runs', 'log', log_dirs)
@@ -14,19 +15,21 @@ def train_yolo(data_path, log_dirs, total_epochs=100):
     print(f"开始训练: {data_path}")
 
     with open(log_file_path, 'a', encoding='utf-8') as log_file:
+        now=datetime.now()
+        log_file.write(f"\n\n\n\n------------------------------{now:%Y.%m.%d-%H:%M}------------------------------\n")
         log_file.write(f"Training started for {data_path}...\n")
 
-        # 修改这里：指定使用第二张GPU（索引1）
-        device = 1 if torch.cuda.is_available() else 'cpu'  # 关键修改
+        device = 0 if torch.cuda.is_available() else 'cpu'  # 关键修改
         print(f"使用设备: {device}")
 
         try:
+            # 根据 显存, 数据集大小等因素调整训练参数
             print("开始训练...")
             model.train(
                 data=data_path,
-                imgsz=800,
+                imgsz=640,
                 epochs=total_epochs,
-                batch=48,
+                batch=16,
                 close_mosaic=10,
                 workers=0,
                 device=device,  # 这里传入修改后的设备参数
@@ -42,17 +45,17 @@ def train_yolo(data_path, log_dirs, total_epochs=100):
             log_file.write(f"训练过程结束 for {data_path}...\n")
 
 
-def batch_train(data_yaml_paths):
+def batch_train(data_yaml_paths, model_weights="yolov8n.pt", total_epochs=100):
     for data_path in data_yaml_paths:
         dataset_dir = os.path.dirname(data_path)
         dataset_name = os.path.basename(dataset_dir)
         log_dirs = os.path.join(dataset_name)
-        train_yolo(data_path, log_dirs)
+        # print(f'dataset_dir: {dataset_dir}, dataset_name: {dataset_name}, log_dirs: {log_dirs}')
+        train_yolo(data_path, log_dirs, total_epochs=total_epochs, model_weights=model_weights)
 
 if __name__ == "__main__":
     data_yaml_paths = [
-            "data/Protections/data.yaml"
+            "./Dataset/data.yaml"
     ]
 
-    model_path = "yolo11m.pt"
-    batch_train(data_yaml_paths)
+    batch_train(data_yaml_paths, model_weights="yolov8n.pt", total_epochs=100)

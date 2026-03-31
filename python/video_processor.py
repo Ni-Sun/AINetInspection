@@ -327,6 +327,7 @@ class FrameProcessor(threading.Thread):
 
     def _reset_record_state(self):
         shutil.rmtree(self.video_path, ignore_errors=True)
+        _, self.video_path, self.output_video_dir, _ = init_directories(self.taskId)
         initialize_thread_local()
         self.recording = False
         self.stop_recording = False
@@ -385,7 +386,7 @@ def analyze_frame_target_entry(taskId, frame, models, frame_boxs, imgsz, device,
             conf = det.conf[0].cpu().item()
             cls = det.cls[0].cpu().item()
 
-            if conf > 0.85:
+            if conf > 0.7:
                 target_in_box = any(is_within_box(xyxy, box) for box in frame_boxs)
                 if target_in_box:
                     detected = True
@@ -599,7 +600,8 @@ def cleanup_resources(cap, video_path):
     """
     清理资源，包括释放视频流和删除临时文件。
     """
-    cap.release()
+    if cap:
+        cap.release()
     cv2.destroyAllWindows()
     if os.path.exists(video_path):
         shutil.rmtree(video_path)

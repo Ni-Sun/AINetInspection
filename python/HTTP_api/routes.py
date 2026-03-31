@@ -8,6 +8,15 @@ import logging
 logging.basicConfig(level=logging.INFO)
 def setup_routes(app):
 
+    @app.route('/', methods=['GET'])
+    def index():
+        return jsonify({"message": "AI video service is running."}), 200
+
+    @app.route('/favicon.ico', methods=['GET'])
+    def favicon():
+        # 避免浏览器自动请求 favicon 时产生 404 日志
+        return '', 204
+
     @app.route('/start_stream', methods=['POST'])
     def start_stream():
         data = request.get_json()
