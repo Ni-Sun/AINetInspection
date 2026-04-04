@@ -37,6 +37,12 @@ def train_yolo(data_path, log_dirs, total_epochs=100, model_weights="yolov8n.pt"
                 optimizer='SGD',
                 project='runs/train',
                 name=log_dirs,
+                patience=30,     # 验证集不提升则提前停止
+                degrees=15,      # 旋转
+                shear=5,         # 剪切
+                flipud=0.5,      # 上下翻转
+                mosaic=1.0,      # 马赛克增强
+                mixup=0.1,       # Mixup 增强
                 # lr0=0.01, # 初始学习率，根据需要调整
             )
             log_file.write(f"训练成功完成 for {data_path}.\n")
@@ -57,10 +63,11 @@ def batch_train(data_yaml_paths, model_weights="yolov8n.pt", total_epochs=100):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="YOLO 多数据集训练脚本")
     parser.add_argument("--epochs", type=int, default=100, help="训练轮数")
+    parser.add_argument("--model-weights", type=str, help="模型权重文件")
     args = parser.parse_args()
 
     data_yaml_paths = [
         "./Dataset/data.yaml"
     ]
 
-    batch_train(data_yaml_paths, model_weights="yolov8n.pt", total_epochs=args.epochs)
+    batch_train(data_yaml_paths, model_weights=args.model_weights, total_epochs=args.epochs)
