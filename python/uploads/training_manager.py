@@ -40,8 +40,7 @@ def start_monitoring(train_id, process_id, stop_event):
                                 elapsed_seconds = parse_time(elapsed_time)
                                 remaining_seconds = parse_time(remaining_time)
                                 # 计算总的预计剩余时间并减去已经使用的时间
-                                total_predicted_time = (elapsed_seconds + remaining_seconds) * (
-                                            total_epochs - current_epoch)
+                                total_predicted_time = (elapsed_seconds + remaining_seconds) * (total_epochs - current_epoch)
                                 predicted_remaining_time = total_predicted_time - elapsed_seconds
 
                                 if predicted_remaining_time > 0:

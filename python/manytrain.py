@@ -1,4 +1,5 @@
 import os
+import argparse
 import torch
 from ultralytics import YOLO
 from datetime import datetime
@@ -29,13 +30,14 @@ def train_yolo(data_path, log_dirs, total_epochs=100, model_weights="yolov8n.pt"
                 data=data_path,
                 imgsz=640,
                 epochs=total_epochs,
-                batch=16,
+                batch=-1,  # 自动调整批量大小
                 close_mosaic=10,
-                workers=0,
+                workers=2,
                 device=device,  # 这里传入修改后的设备参数
                 optimizer='SGD',
                 project='runs/train',
                 name=log_dirs,
+                # lr0=0.01, # 初始学习率，根据需要调整
             )
             log_file.write(f"训练成功完成 for {data_path}.\n")
         except Exception as e:
@@ -50,12 +52,15 @@ def batch_train(data_yaml_paths, model_weights="yolov8n.pt", total_epochs=100):
         dataset_dir = os.path.dirname(data_path)
         dataset_name = os.path.basename(dataset_dir)
         log_dirs = os.path.join(dataset_name)
-        # print(f'dataset_dir: {dataset_dir}, dataset_name: {dataset_name}, log_dirs: {log_dirs}')
         train_yolo(data_path, log_dirs, total_epochs=total_epochs, model_weights=model_weights)
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="YOLO 多数据集训练脚本")
+    parser.add_argument("--epochs", type=int, default=100, help="训练轮数")
+    args = parser.parse_args()
+
     data_yaml_paths = [
-            "./Dataset/data.yaml"
+        "./Dataset/data.yaml"
     ]
 
-    batch_train(data_yaml_paths, model_weights="yolov8n.pt", total_epochs=100)
+    batch_train(data_yaml_paths, model_weights="yolov8n.pt", total_epochs=args.epochs)
